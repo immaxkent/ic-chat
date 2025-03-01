@@ -1,0 +1,16 @@
+@startuml Identity Genesis Flow
+
+actor Sentient as U
+participant C
+participant "Sentient ID (SC)" as SC
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+U -> C: passes data into client
+activate C
+C -> C: client encrypts the\n data via RSA\n with self key
+C -> SC: encrypted data + public key\n published in mapping\n unverifiedCredentials
+deactivate C
+
+@enduml

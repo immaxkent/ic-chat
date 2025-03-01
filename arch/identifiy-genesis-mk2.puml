@@ -1,0 +1,32 @@
+@startuml Identity Genesis Flow
+
+actor Sentient as U
+participant "Sentient Client" as C
+participant "Sentient ID (SC)" as SC
+participant "Procurer ID (SC)" as PI
+participant "Procurer Client" as PC
+actor Procurer as P
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+U -> C: passes data into client
+activate C
+C -> C: client encrypts the\n data via RSA\n with self key
+C -> SC: encrypted data + public key\n published in mapping\n unverifiedCredentials
+deactivate C
+
+P -> PC: procurer submits request for\naccess to credentials\nvia publishing a message 
+activate PC
+PC -> PC: datas encrypted via\nRSA with sentient key, passing\n $amount, <ageReq>, recipient, '\nrequestee keys
+deactivate PC
+activate SC
+PC -> SC: `requestCall` function called on \nsentient contract, emitting\n data as events (not stored on-chain)
+SC <--> C: websocket senses event\nemission and caches the \nmessage locally as json
+deactivate SC
+activate C
+C --> C: client utilises private key\nto decrypt the message, storing\nit locally in cache json
+deactivate SC
+
+
+@enduml
