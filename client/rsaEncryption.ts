@@ -1,15 +1,27 @@
-import forge from "node-forge";
+import * as forge from "node-forge";
+import { ethers } from "ethers";
+import * as dotenv from "dotenv";
+import * as fs from "fs";
+
+dotenv.config();
 
 /**
  * Generate RSA key pair deterministically from Ethereum private key
  */
-function generateRsaKeyPair(): void {
-  if (!this.wallet) {
-    throw new Error("No wallet connected");
-  }
-
+function generateRsaKeyPair(PrivKeyIdentifier?: number): {
+  publicKey: string;
+  privateKey: string;
+} {
+  let ethPrivateKey = "";
   // Use Ethereum private key to seed a PRNG for deterministic key generation
-  const ethPrivateKey = this.wallet.privateKey.slice(2);
+  if (!PrivKeyIdentifier) {
+    ethPrivateKey = process.env.PRIVATE_KEY || "defaultseed12345";
+    if (!process.env.PRIVATE_KEY) {
+      console.warn("Warning: Using default seed - not secure for production");
+    }
+  } else {
+    ethPrivateKey = process.env.PSEUDONYMOUS_PRIVATE_KEY || "defaultseed12345";
+  }
   const seed = forge.util.createBuffer(ethPrivateKey);
   const prng = forge.random.createInstance();
   prng.seedFileSync = function (needed: number) {
@@ -20,22 +32,34 @@ function generateRsaKeyPair(): void {
       data = hash.digest().getBytes();
       seed.putBytes(data);
     }
-
     return seed.getBytes(needed);
   };
-  console.log("Generating RSA key pair from Ethereum key...");
   const keyPair = forge.pki.rsa.generateKeyPair({
     bits: 2048,
     prng: prng,
     workers: -1,
   });
 
-  this.rsaKeyPair = {
+  const publicKeyPem = forge.pki.publicKeyToPem(keyPair.publicKey);
+  const privateKeyPem = forge.pki.privateKeyToPem(keyPair.privateKey);
+
+  fs.writeFileSync("publicKey.pem", publicKeyPem);
+  fs.writeFileSync("privateKey.pem", privateKeyPem);
+
+  console.log("RSA key pair generated successfully from Ethereum key");
+  return {
     publicKey: forge.pki.publicKeyToPem(keyPair.publicKey),
     privateKey: forge.pki.privateKeyToPem(keyPair.privateKey),
   };
+}
 
-  console.log("RSA key pair generated successfully from Ethereum key");
+function loadRsaKeyPair(): { publicKey: string; privateKey: string } {
+  const publicKeyPem = fs.readFileSync("publicKey.pem", "utf8");
+  const privateKeyPem = fs.readFileSync("privateKey.pem", "utf8");
+  return {
+    publicKey: publicKeyPem,
+    privateKey: privateKeyPem,
+  };
 }
 
 /**
@@ -47,7 +71,7 @@ function generateRsaKeyPair(): void {
 function encryptWithRSA(message: string, publicKeyPem: string): string {
   const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
   // RSA can only encrypt limited amount of data
-  // hence sing PKCS#1 v1.5 padding scheme
+  // hence using PKCS#1 v1.5 padding scheme
   const encrypted = publicKey.encrypt(message, "RSA-OAEP", {
     md: forge.md.sha256.create(),
   });
@@ -75,4 +99,4 @@ function decryptWithRSA(
   });
 }
 
-export { generateRsaKeyPair, encryptWithRSA, decryptWithRSA };
+export { generateRsaKeyPair, loadRsaKeyPair, encryptWithRSA, decryptWithRSA };
