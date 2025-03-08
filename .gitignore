@@ -1,6 +1,32 @@
-# Compiler files
-cache/
+# Build output
+dist/
+typechain/
 out/
+cache/
+*.js
+*.js.map
+*.d.ts
+!jest.config.js
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Test artifacts
+artifacts/
+.anvil/
+logs/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # Ignores development broadcast logs
 !/broadcast
@@ -12,3 +38,8 @@ docs/
 
 # Dotenv file
 .env
+
+# RSA Keys
+*.pem
+publicKey.pem
+privateKey.pem
