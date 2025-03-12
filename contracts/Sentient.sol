@@ -8,9 +8,10 @@ contract Sentient is Ownable {
 
     using EthMessageHashing for *;
 
-    mapping(uint8 => bytes32) public unverifiedCredentials; // sentient's encrypted credentials
+    mapping(uint16 => bytes32) public unverifiedCredentials; // sentient's encrypted credentials, stored in key -> value style
     mapping(address => bytes32[]) public approvedProcurersToKeyValueCredentials; // procurer eth address to [0] key and [1] value rsa encrypted sentient credentials
     address public DAO;
+    bytes32 public immutable pubKey;
     
     // Events
     event DataUpdated(uint8 newData, uint256 timestamp);
@@ -21,9 +22,10 @@ contract Sentient is Ownable {
         _;
     }
     
-    constructor(address dao, uint8 key, bytes32 credentials) Ownable() {
-        DAO = dao;
-        updateData(key, credentials);
+    constructor(address _dao, uint8 _key, bytes32 _credentials, bytes32 _pubKey) Ownable() {
+        DAO = _dao;
+        updateData(_key, _credentials);
+        pubKey = _pubKey;
     }
     
     function updateData(uint8 key, bytes32 credentials) internal {
