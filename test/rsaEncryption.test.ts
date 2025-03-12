@@ -3,7 +3,7 @@ import {
   loadRsaKeyPair,
   encryptWithRSA,
   decryptWithRSA,
-} from "../client/rsaEncryption";
+} from "../shared/rsaEncryption";
 
 describe("RSA Encryption", () => {
   test("Should encrypt and decrypt a message successfully", () => {
