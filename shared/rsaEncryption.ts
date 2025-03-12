@@ -12,30 +12,31 @@ function generateRsaKeyPair(PrivKeyIdentifier?: number): {
   publicKey: string;
   privateKey: string;
 } {
-  let ethPrivateKey = "";
-  // Use Ethereum private key to seed a PRNG for deterministic key generation
-  if (!PrivKeyIdentifier) {
-    ethPrivateKey = process.env.PRIVATE_KEY || "defaultseed12345";
-    if (!process.env.PRIVATE_KEY) {
-      console.warn("Warning: Using default seed - not secure for production");
-    }
-  } else {
-    ethPrivateKey = process.env.PSEUDONYMOUS_PRIVATE_KEY || "defaultseed12345";
-  }
-  const seed = forge.util.createBuffer(ethPrivateKey);
+  // let ethPrivateKey = "";
+  // removed use of ethereum private key since the key can be reverse engineered from two like signed messages, making it not secure
+  // better to create and cache a prng on creation of the keys during set up, publishing this to
+  // if (!PrivKeyIdentifier) {
+  //   ethPrivateKey = process.env.PRIVATE_KEY || "defaultseed12345";
+  //   if (!process.env.PRIVATE_KEY) {
+  //     console.warn("Warning: Using default seed - not secure for production");
+  //   }
+  // } else {
+  //   ethPrivateKey = process.env.PSEUDONYMOUS_PRIVATE_KEY || "defaultseed12345";
+  // }
+  // const seed = forge.util.createBuffer();
   const prng = forge.random.createInstance();
-  prng.seedFileSync = function (needed: number) {
-    const hash = forge.md.sha256.create();
-    let data = seed.data;
-    while (seed.length() < needed) {
-      hash.update(data);
-      data = hash.digest().getBytes();
-      seed.putBytes(data);
-    }
-    return seed.getBytes(needed);
-  };
+  // prng.seedFileSync = function (needed: number) {
+  //   const hash = forge.md.sha256.create();
+  //   let data = seed.data;
+  //   while (seed.length() < needed) {
+  //     hash.update(data);
+  //     data = hash.digest().getBytes();
+  //     seed.putBytes(data);
+  //   }
+  //   return seed.getBytes(needed);
+  // };
   const keyPair = forge.pki.rsa.generateKeyPair({
-    bits: 2048,
+    bits: 4096,
     prng: prng,
     workers: -1,
   });
