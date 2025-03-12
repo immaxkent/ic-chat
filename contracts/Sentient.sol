@@ -11,7 +11,13 @@ contract Sentient is Ownable {
     mapping(uint16 => bytes32) public unverifiedCredentials; // sentient's encrypted credentials, stored in key -> value style
     mapping(address => bytes32[]) public approvedProcurersToKeyValueCredentials; // procurer eth address to [0] key and [1] value rsa encrypted sentient credentials
     address public DAO;
-    bytes32 public immutable pubKey;
+    
+    // RSA public key storage (parts)
+    bytes32 public immutable pubKeyPart1;
+    bytes32 public immutable pubKeyPart2;
+    bytes32 public immutable pubKeyPart3;
+    bytes32 public immutable pubKeyPart4;
+    uint8 public pubKeyPartsCount; // How many parts are used
     
     // Events
     event DataUpdated(uint8 newData, uint256 timestamp);
@@ -22,10 +28,18 @@ contract Sentient is Ownable {
         _;
     }
     
-    constructor(address _dao, uint8 _key, bytes32 _credentials, bytes32 _pubKey) Ownable() {
+    constructor(address _dao, uint8 _key, bytes32 _credentials, bytes32[] memory _pubKeyParts) Ownable() {
         DAO = _dao;
         updateData(_key, _credentials);
-        pubKey = _pubKey;
+        
+        // Store public key parts
+        require(_pubKeyParts.length <= 4, "Too many public key parts");
+        pubKeyPartsCount = uint8(_pubKeyParts.length);
+        
+        pubKeyPart1 = _pubKeyParts[0];
+        pubKeyPart2 = _pubKeyParts[1];
+        pubKeyPart3 = _pubKeyParts[2];
+        pubKeyPart4 = _pubKeyParts[3];
     }
     
     function updateData(uint8 key, bytes32 credentials) internal {
@@ -42,7 +56,7 @@ contract Sentient is Ownable {
         emit DataRequest(key, publicKey);
     }
 
-    function approveRequest(bytes calldata data) external onlyDAO {
+    function approveRequest(bytes calldata data, bytes memory signature) external onlyDAO {
 
         // first we deconstruct the incoming data into the components
 
