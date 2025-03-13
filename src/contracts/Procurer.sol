@@ -26,7 +26,7 @@ contract Procurer is Ownable {
         _;
     }
     
-    constructor(string memory _businessName, uint8 _trn, string memory _governingBody, address _dao, bytes32 _pubKey) Ownable() {
+    constructor(string memory _businessName, uint8 _trn, string memory _governingBody, address _dao, bytes32 _pubKey) Ownable(msg.sender) {
         // here we gon create the credentials struct and store it in the mapping, along with initialisation of other elements of the contract
         ProcurerPubCreds memory initialCreds = ProcurerPubCreds({
             businessName: _businessName,
